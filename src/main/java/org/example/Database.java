@@ -1,44 +1,35 @@
 package org.example;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Database {
 
-    private static final String FILE_NAME = "data.txt";
+    private static final String FILE_NAME = "data.json";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static void save(HashMap<Long, Integer> statistic) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME))) {
-            for (Map.Entry<Long, Integer> entry : statistic.entrySet()) {
-                writer.write(entry.getKey() + ":" + entry.getValue());
-                writer.newLine();
-            }
+    public static void save(Map<Long, Integer> statistic) {
+        try (Writer writer = new FileWriter(FILE_NAME)) {
+            objectMapper.writeValue(writer, statistic);
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при сохранении данных", e);
         }
     }
 
-    public static HashMap<Long, Integer> load() {
-        HashMap<Long, Integer> statistic = new HashMap<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    try {
-                        Long chatId = Long.parseLong(parts[0]);
-                        Integer wins = Integer.parseInt(parts[1]);
-                        statistic.put(chatId, wins);
-                    } catch (NumberFormatException e) {
-                        System.err.println("Ошибка при разборе данных: " + line);
-                    }
-                }
-            }
-        } catch (IOException e) {
-            System.err.println("Файл не найден или ошибка при загрузке данных");
+    public static Map<Long, Integer> load() {
+        File file = new File(FILE_NAME);
+        if (!file.exists() || file.length() == 0) {
+            return new HashMap<>();
         }
-        return statistic;
+
+        try (Reader reader = new FileReader(FILE_NAME)) {
+            return objectMapper.readValue(reader, new TypeReference<Map<Long, Integer>>() {});
+        } catch (IOException e) {
+            System.err.println("Ошибка при загрузке данных: " + e.getMessage());
+            return new HashMap<>();
+        }
     }
 }
-

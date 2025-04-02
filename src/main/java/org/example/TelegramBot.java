@@ -13,7 +13,7 @@ public class TelegramBot extends TelegramLongPollingBot {
     private HashMap<Long, Integer> statistic;
 
     public TelegramBot() {
-        this.statistic = Database.load();
+        this.statistic = (HashMap<Long, Integer>) Database.load();
     }
 
     @Override
